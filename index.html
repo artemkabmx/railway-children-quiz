@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f3ebda" />
+  <meta name="description" content="An elegant, interactive reading quiz created by temabmx, with new questions every journey." />
+  <title>The Railway Children · A Reading Adventure by temabmx</title>
+  <style>
+    :root {
+      --paper: #f3ebda; --paper-light: #fffaf0; --paper-mid: #e9dcc3;
+      --ink: #25312c; --ink-soft: #566259; --red: #8d3539; --red-dark: #67282d;
+      --gold: #b99158; --gold-dark: #85633d; --green: #285c4c; --green-soft: #e4f0e7;
+      --line: rgba(80, 67, 48, .21); --shadow: 0 22px 58px rgba(54, 45, 31, .12);
+      --serif: 'Iowan Old Style','Baskerville','Palatino Linotype','Book Antiqua',Georgia,serif;
+      --sans: 'Avenir Next','Trebuchet MS',system-ui,sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); min-height: 100dvh;
+      background-image: radial-gradient(ellipse at 50% -20%, rgba(255,255,250,.85),transparent 64%),
+      repeating-linear-gradient(90deg, transparent 0 3px,rgba(86,66,39,.012) 3px 4px);
+    }
+    button { font: inherit; cursor: pointer; }
+    button:focus-visible, a:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }
+    button:disabled { cursor: not-allowed; }
+    .app { min-height: 100dvh; overflow: hidden; position: relative; }
+    .grain { position: fixed; inset: 0; pointer-events: none; z-index: 30; opacity: .2;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 140 140' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.62' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.17'/%3E%3C/svg%3E"); }
+    .topbar { max-width: 1120px; width: calc(100% - 48px); margin: 0 auto; display: flex; justify-content: space-between;
+      align-items: center; padding: 24px 0 15px; border-bottom: 1px solid var(--line); position: relative; z-index: 3; }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand-icon { width: 41px; height: 41px; border: 1px solid var(--gold); border-radius: 50%;
+      display: grid; place-items: center; background: #f7efdf; }
+    .brand-icon svg { width: 26px; color: var(--red); }
+    .brand-words strong { display: block; text-transform: uppercase; letter-spacing: .19em; font: 700 11px/1.3 var(--sans); }
+    .brand-words small { color: var(--ink-soft); font: italic 12px var(--serif); }
+    .sound-btn { min-width: 124px; display: flex; align-items: center; justify-content: center; gap: 9px;
+      color: var(--ink); background: rgba(255,250,240,.55); padding: 10px 14px; border-radius: 40px; border: 1px solid var(--line); font-size: 12px; font-weight: 700; letter-spacing: .04em; transition: .2s; }
+    .sound-btn:hover { background: #fffaf0; border-color: var(--gold); }
+    .sound-btn svg { width: 16px; height: 16px; }
+    .outer { width: min(1120px,calc(100% - 48px)); margin: 0 auto; position: relative; }
+    .screen { display: none; }
+    .screen.active { display: block; animation: appear .48s ease both; }
+    @keyframes appear { from { opacity: 0; transform: translateY(14px); } to {opacity: 1; transform: translateY(0);} }
+    .eyebrow { display: flex; gap: 13px; align-items: center; color: var(--red); text-transform: uppercase;
+      font-size: 11px; font-weight: 800; letter-spacing: .23em; }
+    .eyebrow::before,.eyebrow::after { content: ''; width: 29px; height: 1px; background: var(--gold); }
+    .intro { padding: 62px 0 0; text-align: center; }
+    .intro .eyebrow { justify-content: center; }
+    h1,h2,h3,p { margin-top: 0; }
+    h1 { font: 400 clamp(54px,8vw,100px)/.97 var(--serif); letter-spacing: -.045em; margin: 19px auto 13px; }
+    h1 em { font-size: .56em; color: var(--red); display: block; letter-spacing: -.02em; font-weight: normal; margin-bottom: 5px; }
+    .subhead { color: var(--ink-soft); font: italic clamp(16px,2.25vw,20px)/1.45 var(--serif); max-width: 530px; margin: 16px auto 25px; }
+    .hero-art { width: min(920px, 100%); margin: 4px auto 9px; position: relative; isolation: isolate; }
+    .hero-art::before { content: ''; position: absolute; border-radius: 50%; background: #e9d9b9; width: 65%; height: 78%; left: 17.5%; top: 10%; z-index: -1; opacity: .4; filter: blur(40px); }
+    .hero-art svg { width: 100%; display: block; height: auto; }
+    .smoke { transform-origin: center bottom; animation: drift 5s ease-in-out infinite; }
+    .smoke.second { animation-delay: -2.2s; }
+    @keyframes drift {0%,100% {opacity:.45; transform: translateY(5px);} 50%{opacity:.85; transform: translateY(-6px);} }
+    .startbar { display: flex; align-items: center; justify-content: center; gap: 22px; flex-wrap: wrap; margin: -2px 0 35px; }
+    .pill-info { font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: #6f695d; font-weight: 700; white-space: nowrap; }
+    .pill-info span { color: var(--red); font-size: 15px; margin-right: 8px; font-family: var(--serif); }
+    .primary { border: 1px solid var(--red-dark); color: #fff8ed; background: var(--red); padding: 16px 27px; border-radius: 4px;
+      font-size: 12px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; box-shadow: 0 7px 0 rgba(92,32,35,.11); transition: transform .2s,background .2s,box-shadow .2s; }
+    .primary:hover { background: var(--red-dark); transform: translateY(-2px); box-shadow: 0 9px 0 rgba(92,32,35,.11); }
+    .primary:active { transform: translateY(2px); box-shadow: 0 3px 0 rgba(92,32,35,.11); }
+    .primary svg { width: 16px; height: 16px; vertical-align: -3px; margin-left: 9px; }
+    .footnote { max-width: 1120px; margin: 22px auto 0; padding: 23px 0 27px; border-top: 1px solid var(--line);
+      display: flex; justify-content: center; gap: 12px; align-items: center; color: #847d6e; font: italic 12px var(--serif); }
+    .footnote .diamond { color: var(--gold); font-style: normal; }
+    /* Quiz layout */
+    .quiz-grid { display: grid; grid-template-columns: 282px minmax(0,1fr); gap: 46px; align-items: start; padding: 54px 0 28px; }
+    .sidebar { padding: 15px 5px 8px 0; }
+    .sidebar .tiny { color: var(--red); font-size: 11px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
+    .sidebar h2 { font: 400 40px/1.04 var(--serif); letter-spacing: -.025em; margin: 16px 0 18px; }
+    .sidebar p { color: var(--ink-soft); font: italic 16px/1.58 var(--serif); max-width: 240px; }
+    .chapter-rule { width: 100%; height: 1px; background: var(--line); margin: 27px 0 21px; }
+    .progress-label { display: flex; justify-content: space-between; color: var(--ink-soft); letter-spacing: .1em;
+      font-size: 10px; font-weight: 800; text-transform: uppercase; }
+    .progress-label strong { color: var(--red); font-size: 13px; }
+    .track-progress { position: relative; height: 37px; padding-top: 9px; }
+    .track-progress::before { content: ''; position: absolute; top: 22px; left: 0; right: 0; height: 3px;
+      background: repeating-linear-gradient(90deg,var(--gold) 0 12px,transparent 12px 18px); opacity:.5; }
+    .track-progress::after { content: ''; position: absolute; top: 21px; left: 0; right: 0; height: 1px; background: #9c886e; }
+    .train-cursor { position: absolute; left: var(--percent, 0%); top: 0px; width: 35px; height: 30px; transition: left .45s ease;
+      transform: translateX(calc(var(--percent, 0%) * -.22)); filter: drop-shadow(0 2px 1px rgba(0,0,0,.08)); }
+    .train-cursor svg { width: 34px; height: 26px; color: var(--red); }
+    .chapter-list { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 18px; }
+    .chapter-num { border: 1px solid #d7c6a9; color: #9f937c; border-radius: 50%; width: 29px; height: 29px;
+      display: grid; place-items: center; font-size: 10px; font-weight: 800; }
+    .chapter-num.done { color: #fff; border-color: var(--green); background: var(--green); }
+    .chapter-num.current { border-color: var(--red); background: #f7e0d5; color: var(--red); }
+    .card { background: var(--paper-light); border: 1px solid #d2c3a9; padding: 9px; box-shadow: var(--shadow);
+      position: relative; }
+    .card::before { content: ''; position: absolute; inset: 4px; border: 1px solid #e9dec9; pointer-events: none; }
+    .card-inner { border: 1px solid #e8ddc7; padding: clamp(24px,4vw,44px); min-height: 460px; position: relative; }
+    .card-corner { position: absolute; color: var(--gold); font: 22px var(--serif); opacity:.6; }
+    .card-corner.tl { left: 13px; top: 10px; } .card-corner.br { bottom: 10px; right: 13px; }
+    .question-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); padding-bottom: 23px; }
+    .question-meta span:first-child { color: var(--red); font: 800 11px var(--sans); letter-spacing: .15em; text-transform: uppercase; }
+    .question-meta .qcount { color: #867c6a; font: italic 15px var(--serif); }
+    .question-title { font: 400 clamp(27px,3.7vw,42px)/1.2 var(--serif); letter-spacing: -.026em; margin: 30px 0 25px; max-width: 650px; }
+    .options { display: grid; gap: 10px; }
+    .option { width: 100%; min-height: 62px; padding: 12px 17px; display:flex; gap: 17px; align-items:center;
+      text-align:left; background:#fffdf6; color:var(--ink); border:1px solid #e1d8c6; border-radius:3px;
+      transition:background .18s,border-color .18s,transform .18s; position:relative; }
+    .option:not(:disabled):hover { border-color:#b98d6a; background:#fff7e8; transform: translateX(3px); }
+    .opt-letter { flex: 0 0 29px; width:29px; height:29px; border:1px solid #d3c4ad; border-radius:50%; display:grid;
+      place-items:center; color:var(--red); font:700 13px var(--serif); }
+    .option .opt-text { font-size:clamp(13px,1.5vw,15px); line-height:1.5; }
+    .option.correct { background:#e7f1e8; border-color:#4c8a67; color:#24583c; }
+    .option.correct .opt-letter { background:var(--green); border-color:var(--green); color:white; }
+    .option.wrong { background:#f9e7df; border-color:#c36d60; color:#803e37; }
+    .option.wrong .opt-letter { background:var(--red); border-color:var(--red); color:white; }
+    .option:disabled:not(.correct):not(.wrong) { color:#9a9486; opacity:.75; }
+    .feedback { margin-top:21px; padding:16px 20px; background:#edf3e9; border-left:3px solid var(--green);
+      animation: appear .3s ease; display:none; }
+    .feedback.show { display:block; }
+    .feedback.is-wrong { background:#fbefdf; border-left-color:var(--red); }
+    .feedback strong { font:700 13px var(--sans); letter-spacing:.035em; }
+    .feedback p { font:15px/1.5 var(--serif); color:#586358; margin:6px 0 0; }
+    .action-row { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:71px; padding-top:19px; }
+    .action-row .note { font:italic 12px var(--serif); color:#817765; }
+    .next { display:none; }
+    .next.show { display:inline-flex; align-items:center; }
+    /* Completion */
+    .result { padding:50px 0 24px; max-width:870px; margin:0 auto; }
+    .result-head { text-align:center; margin-bottom:24px; }
+    .result-head h2 { font:400 clamp(42px,7vw,68px)/1.06 var(--serif); letter-spacing:-.035em; margin:14px 0 10px; }
+    .result-head p { color:var(--ink-soft); font:italic 18px var(--serif); margin:0; }
+    .result-main { border: 1px solid #d2c3a9; padding:9px; background:var(--paper-light); box-shadow:var(--shadow); }
+    .result-inner { border:1px solid #e8ddc7; padding:40px 25px; text-align:center; }
+    .seal { width:130px; height:130px; border-radius:50%; margin:0 auto 22px; border:2px solid var(--gold); display:flex;
+      flex-direction:column; align-items:center; justify-content:center; outline:1px solid #d5bea0; outline-offset:6px;
+      background:radial-gradient(circle at 50% 40%,#fffaf1,#f3e5ce); }
+    .seal strong { color:var(--red); font:400 55px/.9 var(--serif); }
+    .seal span { font:700 10px var(--sans); color:#766145; letter-spacing:.14em; margin-top:7px; }
+    .result-message { font: 400 30px var(--serif); margin:0 0 8px; }
+    .result-desc { font:15px/1.6 var(--serif); color:var(--ink-soft); max-width:400px; margin:0 auto 26px; }
+    .result-buttons {display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+    .secondary {padding:16px 24px; background:transparent; border:1px solid #c2ab8b; border-radius:4px; font:800 12px var(--sans);
+      color:var(--red); letter-spacing:.1em; text-transform:uppercase; transition:.2s;}
+    .secondary:hover {background:#f6e9d6;}
+    .review-wrap { margin:25px 0 12px; display:none; }
+    .review-wrap.show {display:block; animation:appear .3s ease;}
+    .review-title {font:400 29px var(--serif); margin:0 0 14px;}
+    .review-item {background:var(--paper-light); border:1px solid #dfd2bf; margin-bottom:8px; padding:17px 19px;}
+    .review-item .review-line {display:flex; justify-content:space-between; align-items:flex-start; gap:16px;}
+    .review-item strong {font:600 16px/1.5 var(--serif);}
+    .review-mark {font:800 11px var(--sans); letter-spacing:.07em; white-space:nowrap; color:var(--green);}
+    .review-mark.no {color:var(--red);}
+    .review-item p {font:14px/1.5 var(--serif); margin:6px 0 0; color:var(--ink-soft);}
+    .review-item p b {color:var(--ink);}
+    .confetti {position:fixed; left:50%; top:0; width:7px; height:13px; z-index:9; pointer-events:none;
+      background:var(--gold); animation:fall 2.6s ease-in forwards; }
+    @keyframes fall { 0% {opacity:0; transform:translate3d(var(--start), -25px,0) rotate(0deg)}
+      10% {opacity:1} 100% {opacity:0; transform:translate3d(var(--end),100vh,0) rotate(580deg)} }
+    @media (max-width: 800px) { .quiz-grid {grid-template-columns:1fr; gap:14px; padding:31px 0 24px;}
+      .sidebar {padding:0;} .sidebar h2 {font-size:31px; margin:8px 0;} .sidebar p,.chapter-rule {display:none;}
+      .progress-label {margin-top:15px;} .track-progress {height:31px;} .chapter-list {margin-top:8px;}
+      .card-inner {min-height:0;} .intro {padding-top:44px;} .hero-art {margin-top:11px;}
+    }
+    @media (max-width: 500px) { .topbar,.outer {width:calc(100% - 28px);} .topbar {padding-top:16px;}
+      .brand-icon {width:36px;height:36px;} .brand-words strong {font-size:9px;} .brand-words small {font-size:11px;}
+      .sound-btn {min-width:41px; padding:11px; border-radius:50%;} .sound-label {display:none;}
+      .intro {padding-top:42px;} .eyebrow {font-size:9px;letter-spacing:.16em;}
+      h1 {font-size:clamp(51px,12.8vw,70px);} .subhead {font-size:17px; margin-top:14px;}
+      .hero-art {width:118%; margin-left:-9%;} .startbar {gap:13px;}
+      .pill-info {font-size:10px;} .card {padding:5px;} .card-inner {padding:23px 18px 20px;}
+      .question-title {font-size:29px;margin:24px 0 23px;}
+      .option {padding:11px 12px; gap:10px; min-height:59px;} .opt-letter {width:27px; height:27px; flex-basis:27px;}
+      .action-row {align-items:flex-start; flex-direction:column; padding-top:13px; gap:8px;}
+      .next {width:100%; justify-content:center;} .result {padding-top:37px;} .result-inner {padding:36px 18px;}
+      .result-message {font-size:25px;} .result-buttons > button {width:100%;}
+    }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after {animation-duration:.01ms !important;transition-duration:.01ms !important;scroll-behavior:auto !important;} }
+  
+/* Cinematic motion system, keeping the vintage railway visual identity. */
+:root{ --ease-film:cubic-bezier(.18,.72,.17,1); --ease-swipe:cubic-bezier(.77,0,.16,1); }
+body{overflow-x:hidden;}
+.top-actions{display:flex;align-items:center;gap:23px}.book-edition{white-space:nowrap;font-size:10px;letter-spacing:.19em;font-weight:800;color:var(--ink-soft)}.edition-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--red);margin-right:9px;box-shadow:0 0 0 5px #8d35391e}
+.ambient-glow{position:fixed;inset:-30%;pointer-events:none;z-index:0;background:radial-gradient(ellipse 40vw 35vw at var(--glow-x,50%) var(--glow-y,30%),rgba(220,167,105,.14),transparent 80%);transition:opacity .5s}
+.cinematic-wipe{pointer-events:none;position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:var(--red-dark);clip-path:inset(100% 0 0 0);transition:clip-path .6s var(--ease-swipe);color:#f8e8c9;overflow:hidden}
+.cinematic-wipe.is-in{clip-path:inset(0 0 0 0)}.cinematic-wipe.is-out{clip-path:inset(0 0 100% 0)}.wipe-word{font:italic clamp(20px,5vw,70px) var(--serif);letter-spacing:.05em;text-align:center;opacity:.82;transform:translateY(15px);transition:transform .4s}.cinematic-wipe.is-in .wipe-word{transform:translateY(0)}.wipe-rail{position:absolute;bottom:11%;height:2px;width:100%;background:linear-gradient(90deg,transparent,#d8a775,transparent)}
+.cinematic-title{perspective:1000px;}.cinematic-title>span{display:inline-block;animation:title-line 1.15s var(--ease-film) both;}.cinematic-title>span:last-child{animation-delay:.16s}.cinematic-title em{overflow:hidden;}.cinematic-title em span{display:inline-block;animation:title-line .95s var(--ease-film) .05s both}@keyframes title-line{from{opacity:0;transform:translateY(.72em) rotateX(12deg);filter:blur(7px)}to{opacity:1;transform:translateY(0) rotateX(0);filter:blur(0)}}
+.intro{position:relative;isolation:isolate;}.intro:before{content:"";position:absolute;inset:40px -20vw auto;height:560px;z-index:-1;opacity:.85;background:radial-gradient(ellipse at 50% 60%,rgba(237,208,160,.23),transparent 65%);pointer-events:none}
+.hero-art{--shift-x:0px;--shift-y:0px;--scroll-y:0px;will-change:transform;transform:translate3d(var(--shift-x),calc(var(--shift-y) + var(--scroll-y)),0);transition:transform .15s ease-out;filter:drop-shadow(0 14px 22px #4d4b3b0a)}
+.hero-art:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 35%,#fff9e918 48%,transparent 60%);animation:scene-shimmer 6s ease-in-out infinite}@keyframes scene-shimmer{0%,32%{transform:translateX(-65%)}60%,100%{transform:translateX(65%)}}
+.startbar .primary{position:relative;overflow:hidden}.startbar .primary:after,.result-buttons .primary:after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 32%,#fff7e64d 48%,transparent 62%);transform:translateX(-110%);transition:transform .7s}.startbar .primary:hover:after,.result-buttons .primary:hover:after{transform:translateX(110%)}
+.control-deck{display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:center;text-align:left;background:#f9f1e4b8;padding:22px 27px;margin:40px 0 10px;border-top:1px solid #bd9d71a6;border-bottom:1px solid #bd9d71a6;box-shadow:0 12px 32px #6653300a}.deck-copy b{display:block;color:var(--red);letter-spacing:.22em;font-size:10px;margin-bottom:7px}.deck-copy span{font:italic 14px var(--serif);color:var(--ink-soft)}.mode-selector{display:flex;gap:8px}.mode-btn{border:1px solid #d8c9ae;background:#fffaf1;color:var(--ink);border-radius:4px;padding:11px 18px;min-width:137px;text-align:left;font-size:12px;font-weight:800;letter-spacing:.04em;transition:all .2s}.mode-btn span{color:var(--red);font-size:19px;vertical-align:-2px;margin-right:6px}.mode-btn small{display:block;color:#8a8070;font:italic 12px var(--serif);margin:3px 0 0 24px}.mode-btn.selected{background:var(--green);border-color:var(--green);color:#fff8e8;box-shadow:0 4px 12px #285c4c26}.mode-btn.selected span,.mode-btn.selected small{color:#f2dbb8}.mode-btn:hover:not(.selected){transform:translateY(-2px);border-color:var(--gold)}.deck-stats{text-align:right}.deck-stats strong{display:block;font:400 39px var(--serif);color:var(--red);line-height:1}.deck-stats small{font:italic 13px var(--serif);color:var(--ink-soft)}
+.cinema-section{padding:100px 0 30px;text-align:left}.cinema-heading{text-align:center;margin:0 auto 42px}.cinema-heading .eyebrow{justify-content:center}.cinema-heading h2{font:400 clamp(35px,5.7vw,72px)/1.07 var(--serif);letter-spacing:-.035em;margin:24px 0 19px}.cinema-heading h2 em{color:var(--red)}.cinema-heading p{font:italic 16px var(--serif);color:var(--ink-soft)}
+.scene-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.scene-card{border:1px solid #c8b99d;padding:12px;background:#fff8eaf0;min-width:0;box-shadow:0 12px 35px #4039270d;overflow:hidden;transition:transform .48s var(--ease-film),box-shadow .35s}.scene-card:hover{transform:translateY(-9px)!important;box-shadow:0 27px 45px #40392720}.scene-serial{display:block;padding:4px 9px 13px;font-size:9px;font-weight:800;letter-spacing:.2em;color:#8e5148}.scene-picture{position:relative;height:225px;overflow:hidden;isolation:isolate;background:#e8dac0}.scene-card h3{font:400 29px var(--serif);margin:17px 10px 7px}.scene-card p{font:italic 14px/1.5 var(--serif);color:var(--ink-soft);margin:0 10px 11px}.scene-home{background:linear-gradient(#e8d5b0 0%,#ece2cb 65%,#bac6aa 65%,#a8b597 100%)}.scene-sun{position:absolute;width:130px;height:130px;border-radius:50%;background:#f8d5a0;top:15px;right:16px;box-shadow:0 0 80px 25px #e5c99e88}.scene-house{position:absolute;bottom:26px;left:20%;width:62%;height:115px;background:linear-gradient(90deg,#ae725a,#c88c6d);border:5px solid #855642;box-shadow:13px 9px 0 #6c7c64a1}.scene-house:before{content:"";position:absolute;left:-11%;top:-49px;width:122%;height:53px;background:#703d3a;clip-path:polygon(50% 0,100% 100%,0 100%)}.scene-house i{position:absolute;top:19px;left:17%;width:23%;height:43px;border:5px solid #6e4c3f;background:#f9dfaa}.scene-house i+i{left:auto;right:17%}.scene-ground{position:absolute;bottom:0;background:#728c76;height:25px;width:100%}
+.scene-gift{background:radial-gradient(circle at 50% 56%,#f6dcac,#cfb59a)}.gift-halo{position:absolute;width:178px;height:178px;border-radius:50%;border:1px solid #bc9864;left:calc(50% - 89px);top:calc(50% - 89px);box-shadow:0 0 0 25px #f5e0b139,0 0 0 60px #f5e0b12d;animation:halo 6s ease-in-out infinite}@keyframes halo{50%{transform:scale(1.16);opacity:.55}}.gift-engine{font:90px/1 var(--serif);position:absolute;left:50%;top:41%;color:#285c4c;transform:translate(-50%,-50%) rotate(-90deg);text-shadow:4px 8px 0 #643a3260}.gift-engine small{position:absolute;font:700 30px monospace;white-space:nowrap;left:-10px;top:37px;transform:rotate(90deg);color:#8d3539}.scene-change{background:linear-gradient(128deg,#4b6b5d,#28382f);}.change-ring{position:absolute;width:210px;height:210px;border:1px solid #efc38499;border-radius:50%;left:50%;top:53%;transform:translate(-50%,-50%);box-shadow:0 0 0 30px #f2bc6830,0 0 0 65px #f5ddac12;animation:ringpulse 7s ease-in-out infinite}@keyframes ringpulse{50%{box-shadow:0 0 0 45px #f2bc6825,0 0 0 95px #f5ddac09}}.change-emblem{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);font:130px/1 var(--serif);color:#efcc90;text-shadow:0 0 40px #eeb16480}.change-ray{position:absolute;top:-20%;left:40%;width:4px;height:150%;background:linear-gradient(transparent,#ffd59e88,transparent);transform:rotate(45deg)}.change-ray.second{left:58%;transform:rotate(-45deg)}
+.cinema-caption{display:flex;justify-content:space-between;gap:15px;border-bottom:1px solid #cdbca1;padding:19px 0 25px;font-size:9px;font-weight:800;letter-spacing:.18em;color:var(--ink-soft)}
+.reveal{opacity:0;transform:translateY(65px);filter:blur(7px);transition:opacity .85s var(--ease-film),transform .9s var(--ease-film),filter .8s var(--ease-film)}.reveal.visible{opacity:1;transform:translateY(0);filter:blur(0)}.scene-card.reveal:nth-child(2){transition-delay:.12s}.scene-card.reveal:nth-child(3){transition-delay:.22s}
+.quiz-grid{transition:background .4s}.card{overflow:hidden}.card:after{content:"";position:absolute;inset:-70% -60%;pointer-events:none;background:linear-gradient(105deg,transparent 45%,#d7b78b10 50%,transparent 55%);transform:translateX(-40%) rotate(12deg);animation:card-shine 10s ease-in-out infinite}@keyframes card-shine{0%,45%{transform:translateX(-80%) rotate(12deg)}75%,100%{transform:translateX(65%) rotate(12deg)}}.question-title{transition:opacity .3s,transform .3s}.card-inner.is-leaving .question-title,.card-inner.is-leaving .options,.card-inner.is-leaving .hint-tools{opacity:0;transform:translateY(-16px);transition:opacity .18s,transform .18s}.card-inner.is-entering .question-title,.card-inner.is-entering .option,.card-inner.is-entering .hint-tools{animation:question-arrive .65s var(--ease-film) both}.card-inner.is-entering .option:nth-child(2){animation-delay:.06s}.card-inner.is-entering .option:nth-child(3){animation-delay:.12s}.card-inner.is-entering .option:nth-child(4){animation-delay:.18s}@keyframes question-arrive{from{opacity:0;transform:translateY(24px);filter:blur(3px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+.railway-scoreboard{display:grid;grid-template-columns:1fr 1fr;border:1px solid #cfbea3;margin-top:27px;background:#faf0dd}.railway-scoreboard>div{padding:16px 12px}.railway-scoreboard>div+div{border-left:1px solid #cfbea3}.railway-scoreboard span{display:block;font-size:9px;font-weight:800;letter-spacing:.14em;color:#776d5c}.railway-scoreboard strong{font:400 29px var(--serif);color:var(--red);display:block;margin-top:4px}.bank-disclaimer{font:italic 13px var(--serif)!important;margin-top:15px;color:#79705f!important}.timer-wrap{padding-top:15px}.timer-wrap>span{font-size:10px;font-weight:800;letter-spacing:.15em;color:var(--red)}.timer-wrap strong{float:right;font:500 23px var(--serif)}.timer-rail{clear:both;width:100%;height:5px;border-radius:10px;background:#d9cbb5;margin-top:14px;overflow:hidden}.timer-rail span{height:100%;display:block;width:100%;background:var(--green);transition:width .12s linear,background .2s}.timer-wrap.danger strong{color:var(--red)}.timer-wrap.danger .timer-rail span{background:var(--red)}
+.hint-tools{border-top:1px dashed #e1d2b8;margin-top:19px;padding-top:10px}.hint-btn{border:0;background:none;padding:8px 0;color:var(--gold-dark);font:italic 15px var(--serif);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:4px}.hint-btn:hover{color:var(--red)}.hint-btn:disabled{opacity:.6;cursor:default}.hint-content{font:italic 14px/1.5 var(--serif);color:var(--ink-soft);max-height:0;overflow:hidden;transition:max-height .3s}.hint-content.show{max-height:90px;padding:6px 0 2px}
+.result-statline{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:500px;margin:27px auto}.result-statline>div{border-top:1px solid #d4c2a7;border-bottom:1px solid #d4c2a7;padding:13px 5px}.result-statline small{display:block;font-size:9px;font-weight:800;letter-spacing:.12em;color:#766d5e}.result-statline strong{display:block;font:400 24px var(--serif);color:var(--red);margin-top:4px}.achievements{margin:10px auto 20px;display:flex;justify-content:center;flex-wrap:wrap;gap:8px}.achievement{padding:7px 12px;border-radius:20px;border:1px solid #b69868;color:var(--red-dark);font:700 10px var(--sans);letter-spacing:.08em;background:#f6e8d1}.cycle-note{font:italic 13px/1.5 var(--serif);color:var(--ink-soft);margin:18px auto 0;max-width:500px}
+.footer-version{position:absolute;right:2%;font:800 8px var(--sans);letter-spacing:.18em;opacity:.6}.footnote{position:relative}.result-buttons>.secondary{white-space:nowrap}.result-buttons{flex-wrap:wrap}
+@media(max-width:950px){.control-deck{grid-template-columns:1fr auto}.deck-stats{grid-column:1/-1;text-align:center;border-top:1px solid #dfd1ba;padding-top:12px}.deck-stats strong{display:inline;font-size:26px;margin-right:8px}.book-edition{display:none}.scene-picture{height:175px}}
+@media(max-width:700px){.control-deck{grid-template-columns:1fr;text-align:center;gap:12px;padding:21px 15px}.mode-selector{justify-content:center}.scene-gallery{grid-template-columns:1fr;max-width:450px;margin:auto}.scene-picture{height:200px}.scene-card h3{font-size:26px}.cinema-section{padding-top:65px}.cinema-caption{flex-direction:column;text-align:center}.top-actions{gap:0}.footer-version{display:none}}
+@media(max-width:500px){.control-deck{margin-top:35px}.mode-btn{min-width:118px;padding:10px}.scene-gallery{gap:15px}.scene-card{padding:9px}.scene-serial{font-size:9px}.cinema-heading h2{font-size:37px}.cinema-heading p{font-size:14px;padding:0 10px}.result-statline{gap:6px}.result-statline small{font-size:7px}.result-statline strong{font-size:19px}.railway-scoreboard{margin-top:13px}.cinematic-wipe .wipe-word{font-size:20px}.result-buttons{gap:8px}.result-buttons button{width:100%}.book-edition{display:none}}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;filter:none;transform:none}.cinematic-title>span,.cinematic-title em span{animation:none}.cinematic-wipe{transition:none}}
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="grain" aria-hidden="true"></div>
+    <div class="cinematic-wipe" id="cinematicWipe" aria-hidden="true"><span class="wipe-word">THE RAILWAY CHILDREN</span><span class="wipe-rail"></span></div>
+    <div class="ambient-glow" aria-hidden="true"></div>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 29h32M9 28V17h6V8h9v20M15 14h16v14H7"/><circle cx="12" cy="31" r="3" fill="currentColor"/><circle cx="29" cy="31" r="3" fill="currentColor"/><path d="M20 19h6m-6 4h6M4 35h32"/></svg></div>
+        <div class="brand-words"><strong>The Railway Children</strong><small>An English reading adventure · by temabmx</small></div>
+      </div>
+      <div class="top-actions"><div class="book-edition"><span class="edition-dot"></span> INTERACTIVE EDITION</div><button class="sound-btn" id="soundBtn" type="button" aria-label="Turn sound off" aria-pressed="true">
+        <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4V5z"/><path d="M15 9a5 5 0 010 6m3-9a9 9 0 010 12"/></svg>
+        <span class="sound-label" id="soundLabel">Sound on</span>
+      </button></div>
+    </header>
+    <main class="outer">
+      <section class="screen active" id="welcome" aria-labelledby="welcomeTitle">
+        <div class="intro" id="intro" >
+          <div class="eyebrow">Chapter I · The happy family</div>
+          <h1 id="welcomeTitle" class="cinematic-title"><em><span>A journey through</span></em><span>The Railway</span><br /><span>Children</span></h1>
+          <p class="subhead">Step aboard a little adventure through the pages of E. Nesbit’s beloved story.</p>
+          <div class="hero-art" id="heroArt" aria-hidden="true">
+            <svg viewBox="0 0 960 275" role="img" aria-label="Vintage steam train travelling past the countryside">
+              <defs><linearGradient id="hills" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e7d4b1"/><stop offset="1" stop-color="#d7c49e"/></linearGradient><linearGradient id="metal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#496b5e"/><stop offset="1" stop-color="#213c35"/></linearGradient></defs>
+              <circle cx="493" cy="105" r="91" fill="#e6cfaa" opacity=".53"/><circle cx="493" cy="105" r="73" fill="none" stroke="#bb9c6d" stroke-width="1" opacity=".6"/>
+              <path d="M0 195q95-70 174-20t179-18q88-60 172-9t181-5q87-49 155 12v60H0z" fill="url(#hills)" opacity=".7"/>
+              <path d="M0 215q111-29 206-9t173-9q95-33 194 10t204-12q83-21 183 2v40H0z" fill="#c7c9a7" opacity=".57"/>
+              <g fill="none" stroke="#8b8a6e" opacity=".7"><path d="M45 191v-37m-10 14 10-13 10 14m-16 7 6-9 6 9M869 190v-43m-12 17 12-18 12 18m-18 5 6-9 6 9" stroke-width="3"/></g>
+              <g class="smoke" fill="none" stroke="#b5a385" stroke-width="9" stroke-linecap="round" opacity=".7"><path d="M338 69c-27-21 8-31-12-47M376 49c-23-15 13-28-7-44"/></g>
+              <g class="smoke second" fill="none" stroke="#d4c0a3" stroke-width="7" stroke-linecap="round"><path d="M299 83c-12-18 10-25-3-41"/></g>
+              <g transform="translate(195 86)">
+                <!-- wagon -->
+                <path d="M377 86h190l9 11v65H375z" fill="#8f3c40" stroke="#642c30" stroke-width="3"/>
+                <path d="M393 96h166v40H393z" fill="#f0d9ad"/><path d="M408 96v40m36-40v40m36-40v40m36-40v40" stroke="#794042" stroke-width="7"/>
+                <path d="M377 144h200v10H377z" fill="#492f2f"/><path d="M386 85h178" stroke="#bb9b62" stroke-width="5"/>
+                <circle cx="405" cy="165" r="19" fill="#24352f"/><circle cx="405" cy="165" r="8" fill="#bc9b67"/><circle cx="535" cy="165" r="19" fill="#24352f"/><circle cx="535" cy="165" r="8" fill="#bc9b67"/>
+                <!-- boiler -->
+                <rect x="122" y="96" width="238" height="66" rx="10" fill="url(#metal)" stroke="#203d36" stroke-width="4"/>
+                <rect x="220" y="56" width="123" height="91" fill="#315448" stroke="#1f3d35" stroke-width="4"/>
+                <rect x="235" y="69" width="92" height="48" fill="#f4d9a2" stroke="#b6925e" stroke-width="4"/><path d="M279 69v48" stroke="#3b6657" stroke-width="5"/>
+                <path d="M212 52h136v12H212zM232 138h121v20H232z" fill="#203c35"/>
+                <path d="M110 99h132l8 38H117z" fill="#324f45"/><rect x="109" y="90" width="139" height="9" rx="3" fill="#af8752"/>
+                <path d="M137 54h36l8 36h-50z" fill="#25453c" stroke="#17352d" stroke-width="3"/><path d="M126 55h60v10h-60z" fill="#bc965a"/>
+                <path d="M105 139h-37v21h38z" fill="#263a32"/><path d="M63 148L32 161h31z" fill="#8c3337"/><path d="M67 140v27h19v-27" fill="#d3aa69"/>
+                <path d="M107 151h261v18H107z" fill="#7b3336"/><path d="M115 153h250" stroke="#c3a06b" stroke-width="3"/>
+                <circle cx="145" cy="171" r="26" fill="#263d36" stroke="#172b26" stroke-width="4"/><circle cx="145" cy="171" r="11" fill="#b38f57"/>
+                <circle cx="229" cy="171" r="26" fill="#263d36" stroke="#172b26" stroke-width="4"/><circle cx="229" cy="171" r="11" fill="#b38f57"/>
+                <circle cx="318" cy="171" r="26" fill="#263d36" stroke="#172b26" stroke-width="4"/><circle cx="318" cy="171" r="11" fill="#b38f57"/>
+                <path d="M145 171h173" stroke="#c9a36e" stroke-width="5" stroke-linecap="round"/><path d="M245 56v-13h-15v-7h42v7h-13v13" fill="#b99158"/>
+                <circle cx="119" cy="125" r="7" fill="#efd09c"/><path d="M367 156h12" stroke="#232e2b" stroke-width="7"/>
+              </g>
+              <path d="M0 258h960M0 264h960" stroke="#806e58" stroke-width="3"/>
+              <path d="M15 255v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16m28-16v16" stroke="#b49e80" stroke-width="7"/>
+            </svg>
+          </div>
+          <div class="startbar">
+            <div class="pill-info"><span>10</span>Questions</div>
+            <button class="primary" id="startBtn">Begin the journey <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+            <div class="pill-info"><span>1</span>Chapter</div>
+          </div>
+          <div class="control-deck reveal">
+            <div class="deck-copy"><b>YOUR PASSAGE</b><span>Choose how the next chapter unfolds.</span></div>
+            <div class="mode-selector" role="group" aria-label="Quiz mode">
+              <button type="button" id="relaxedMode" class="mode-btn selected" aria-pressed="true"><span>◇</span> Classic <small>Take your time</small></button>
+              <button type="button" id="timedMode" class="mode-btn" aria-pressed="false"><span>◷</span> Timed <small>20 seconds each</small></button>
+            </div>
+            <div class="deck-stats"><strong id="remainingCount">53</strong><small>fresh questions remaining</small></div>
+          </div>
+          <section class="cinema-section" aria-label="Story moments">
+            <div class="cinema-heading reveal"><span class="eyebrow">A story in three scenes</span><h2>From a beautiful <em>beginning</em><br>to an unexpected <em>turn.</em></h2><p>A little preview of the chapter, before you put your memory to the test.</p></div>
+            <div class="scene-gallery">
+              <div class="scene-card reveal" data-depth="0.11"><span class="scene-serial">SCENE 01 / THE HOME</span><div class="scene-picture scene-home"><span class="scene-sun"></span><span class="scene-house"><i></i><i></i></span><span class="scene-ground"></span></div><h3>The Red Villa</h3><p>A home full of warmth, stories and laughter.</p></div>
+              <div class="scene-card reveal" data-depth="0.14"><span class="scene-serial">SCENE 02 / THE GIFT</span><div class="scene-picture scene-gift"><span class="gift-halo"></span><span class="gift-engine">♧<small>╍╍◉══◉</small></span></div><h3>A perfect present</h3><p>Peter’s tenth birthday brings an extraordinary surprise.</p></div>
+              <div class="scene-card reveal" data-depth="0.10"><span class="scene-serial">SCENE 03 / THE CHANGE</span><div class="scene-picture scene-change"><span class="change-ring"></span><span class="change-ray"></span><span class="change-ray second"></span><span class="change-emblem">✧</span></div><h3>The turning point</h3><p>Three days later, everything takes a different turn.</p></div>
+            </div>
+            <div class="cinema-caption reveal"><span>✦ &nbsp; VINTAGE STORYBOOK / CINEMATIC EXPERIENCE</span><span>SCROLL TO EXPLORE · CHOOSE TO PLAY</span></div>
+          </section>
+        </div>
+      </section>
+      <section class="screen" id="quiz" aria-labelledby="questionText">
+        <div class="quiz-grid">
+          <aside class="sidebar">
+            <span class="tiny">Your reading journey</span>
+            <h2>Every story<br/>has a beginning.</h2>
+            <p>Remember the children, their happy home, and the extraordinary birthday present.</p>
+            <div class="chapter-rule"></div>
+            <div class="progress-label"><span>Journey progress</span><strong id="progressLabel">1 / 10</strong></div>
+            <div class="track-progress">
+              <div class="train-cursor" id="trainCursor" style="--percent:0%" aria-hidden="true"><svg viewBox="0 0 45 31" fill="currentColor"><path d="M10 4h6v10h22v7H5v-7h5zM3 23h39v3H3z"/><circle cx="12" cy="27" r="4"/><circle cx="31" cy="27" r="4"/></svg></div>
+            </div>
+            <div class="chapter-list" id="chapterList" aria-label="Question progress"></div>
+            <div class="railway-scoreboard">
+              <div><span>ON A ROLL</span><strong id="streakCount">0</strong></div>
+              <div><span>PERSONAL BEST</span><strong id="bestCount">—</strong></div>
+            </div>
+            <div class="timer-wrap" id="timerWrap" hidden><span>TIME REMAINING</span><strong id="timerText">20</strong><div class="timer-rail"><span id="timerFill"></span></div></div>
+            <p class="bank-disclaimer" id="bankInfo">Every journey is a new collection of moments.</p>
+          </aside>
+          <div class="card">
+            <div class="card-inner">
+              <span class="card-corner tl" aria-hidden="true">✦</span><span class="card-corner br" aria-hidden="true">✦</span>
+              <div class="question-meta"><span id="chapterTag">Reading comprehension</span><span class="qcount" id="questionNumber">Question 01 / 10</span></div>
+              <h2 class="question-title" id="questionText"></h2>
+              <div class="options" id="options" role="group" aria-label="Choose one answer"></div>
+              <div class="hint-tools"><button id="hintBtn" type="button" class="hint-btn">✦ &nbsp; Need a hint?</button><div class="hint-content" id="hintContent" aria-live="polite"></div></div>
+              <div class="feedback" id="feedback" role="status" aria-live="polite"><strong id="feedbackTitle"></strong><p id="feedbackExplanation"></p></div>
+              <div class="action-row"><span class="note" id="questionNote">Choose one answer to continue.</span><button class="primary next" id="nextBtn">Next question <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="screen" id="results" aria-labelledby="resultsTitle">
+        <div class="result">
+          <div class="result-head"><div class="eyebrow" style="justify-content:center">Your journey is complete</div><h2 id="resultsTitle">The End of Chapter One</h2><p>A new story begins with every page.</p></div>
+          <div class="result-main"><div class="result-inner">
+            <div class="seal"><strong id="scoreText">0/10</strong><span>YOUR SCORE</span></div>
+            <h3 class="result-message" id="resultMessage">Well done, traveller.</h3><p class="result-desc" id="resultDescription"></p>
+            <div class="result-statline"><div><small>PERSONAL BEST</small><strong id="resultBest">0 / 10</strong></div><div><small>JOURNEYS FINISHED</small><strong id="resultAttempts">0</strong></div><div><small>UNSEEN QUESTIONS</small><strong id="resultUnseen">0</strong></div></div>
+            <div id="achievements" class="achievements" aria-live="polite"></div>
+            <div class="result-buttons"><button class="primary" id="retryBtn">A new journey ↻</button><button class="secondary" id="reviewBtn" aria-expanded="false">Review answers</button><button class="secondary" id="shareBtn">Share result ↗</button></div><p class="cycle-note" id="cycleNote"></p>
+          </div></div>
+          <div class="review-wrap" id="reviewWrap" aria-label="Answer review"><h3 class="review-title">Your answer journal</h3><div id="reviewList"></div></div>
+        </div>
+      </section>
+    </main>
+    <footer class="footnote"><span class="diamond">✦</span>Inspired by Chapter One of <i>The Railway Children</i> by E. Nesbit <span class="diamond">✦</span> Made by <strong>temabmx</strong> <span class="diamond">✦</span><span class="footer-version">THE FIRST CHAPTER · 2026</span></footer>
+  </div>
+<script>
+'use strict';
+const BANK = [{"id":"rc01","q":"What did Peter want to become when he grew up?","options":["A doctor","An engineer","A teacher","A writer"],"answer":1,"explanation":"Peter wanted to become an engineer.","chapter":"FAMILY","hint":"Think about Peter’s plans for the future."},{"id":"rc02","q":"What did the children’s mother often do?","options":["Travel by train","Work in a shop","Play with her children and read to them","Visit friends all day"],"answer":2,"explanation":"Their mother was almost always ready to play, read, and help with their lessons.","chapter":"FAMILY","hint":"Recall the description of the children’s home life."},{"id":"rc03","q":"What happened to Peter’s model engine after three days?","options":["It exploded","It disappeared","Peter sold it","His father took it away"],"answer":0,"explanation":"After exactly three days, the model engine went off with a bang.","chapter":"BIRTHDAY","hint":"Remember the sudden event involving the birthday present."},{"id":"rc04","q":"Who was the eldest of the three children?","options":["Phyllis","James","Peter","Roberta"],"answer":3,"explanation":"Roberta was the eldest child.","chapter":"FAMILY","hint":"The children are introduced in order of age."},{"id":"rc05","q":"Who was the youngest child?","options":["Roberta","Phyllis","Peter","James"],"answer":1,"explanation":"Phyllis was the youngest of the three children.","chapter":"FAMILY","hint":"Remember the youngest sibling’s name."},{"id":"rc06","q":"What kind of house did the family live in?","options":["A mountain cottage","A flat above a station","A red-brick suburban villa","A farmhouse by the sea"],"answer":2,"explanation":"They lived in an ordinary red-brick-fronted villa.","chapter":"THE RED VILLA","hint":"Recall the appearance of the family home."},{"id":"rc07","q":"Who was James?","options":["The family dog","The children’s uncle","The family doctor","Peter’s school friend"],"answer":0,"explanation":"James was the children’s dog.","chapter":"FAMILY","hint":"James is mentioned among the things the children had."},{"id":"rc08","q":"How did the children’s father usually behave?","options":["He was often angry","He disliked games","He was never home","He was kind and ready to play"],"answer":3,"explanation":"Their father was never cross or unjust and was ready for games.","chapter":"FAMILY","hint":"Think of the narrator’s description of the father."},{"id":"rc09","q":"How old was Peter on the birthday in the story?","options":["Eight","Ten","Eleven","Twelve"],"answer":1,"explanation":"Peter was celebrating his tenth birthday.","chapter":"BIRTHDAY","hint":"The narrator specifies the exact birthday."},{"id":"rc10","q":"Why did Peter have to stay in bed the next day?","options":["He had hurt his foot","He was afraid of the dog","He had caught a cold","He had travelled all night"],"answer":2,"explanation":"Peter had a cold and had to stay in bed the next day.","chapter":"AFTERMATH","hint":"Remember what happened after the model engine broke."},{"id":"rc11","q":"What were the children like before they became “Railway Children”?","options":["Ordinary suburban children","Children who worked at a station","Children living on a train","Children who built railways"],"answer":0,"explanation":"They were ordinary suburban children.","chapter":"THE RED VILLA","hint":"Recall the very opening of the passage."},{"id":"rc12","q":"What did the children once use railways for?","options":["Visiting a coal mine","Getting to places such as the Zoological Gardens","Travelling to a distant school","Taking goods to market"],"answer":1,"explanation":"They thought of railways as a way to reach places such as the Zoological Gardens.","chapter":"THE RED VILLA","hint":"Think of the outings named near the start."},{"id":"rc13","q":"Which place is mentioned as a possible railway destination?","options":["The Tower of London","Buckingham Palace","Madame Tussauds","The British Museum"],"answer":2,"explanation":"Madame Tussauds is listed alongside a pantomime and the Zoological Gardens.","chapter":"THE RED VILLA","hint":"Recall the attractions listed in the opening paragraph."},{"id":"rc14","q":"Where did the family live before their lives changed?","options":["The Green Cottage","The Railway House","The Red Villa","The Old Farm"],"answer":2,"explanation":"Their earlier happy life took place in the Red Villa.","chapter":"THE RED VILLA","hint":"The narrator gives the house a name."},{"id":"rc15","q":"What decorated the front door of the house?","options":["A brass lion","Coloured glass","Blue curtains","A painted number"],"answer":1,"explanation":"The front door had coloured glass.","chapter":"THE RED VILLA","hint":"Think of a decorative detail on the entrance."},{"id":"rc16","q":"What did the family call the tiled passage?","options":["The hall","The nursery","The landing","The drawing room"],"answer":0,"explanation":"The tiled passage was called a hall.","chapter":"THE RED VILLA","hint":"The house’s entrance area had a special name."},{"id":"rc17","q":"What was special about the bathroom?","options":["It had a fireplace","It had a glass roof","It had hot and cold water","It had no running water"],"answer":2,"explanation":"The bathroom had both hot and cold water.","chapter":"THE RED VILLA","hint":"Remember one of the conveniences of the home."},{"id":"rc18","q":"Which electrical convenience did the house have?","options":["Electric bells","An electric lift","A television","An electric cooker"],"answer":0,"explanation":"Electric bells were one of the house’s modern features.","chapter":"THE RED VILLA","hint":"Think of an appliance mentioned among the conveniences."},{"id":"rc19","q":"Which type of window did the house have?","options":["Round ship windows","French windows","Stained-glass church windows","Tiny attic windows"],"answer":1,"explanation":"The house had French windows.","chapter":"THE RED VILLA","hint":"The text names a particular type of large window."},{"id":"rc20","q":"How did the estate agents describe the house?","options":["A beautiful country retreat","A house beside the rails","A place for large families only","A home with every modern convenience"],"answer":3,"explanation":"The estate agents called its features “every modern convenience.”","chapter":"THE RED VILLA","hint":"Think about the advertisement-like description."},{"id":"rc21","q":"How many children were in the family?","options":["Two","Three","Four","Five"],"answer":1,"explanation":"There were three children: Roberta, Peter and Phyllis.","chapter":"FAMILY","hint":"Count the siblings named in the passage."},{"id":"rc22","q":"Who came between Roberta and Phyllis in age?","options":["James","Peter","A cousin","No one"],"answer":1,"explanation":"Peter was the middle child.","chapter":"FAMILY","hint":"The narrator introduces each sibling from oldest to youngest."},{"id":"rc23","q":"Who might have been Mother’s favourite, according to the narrator?","options":["Roberta","Phyllis","Peter","James"],"answer":0,"explanation":"The narrator jokes that, if Mother had a favourite, it might have been Roberta.","chapter":"FAMILY","hint":"Notice the playful sentence about favourites."},{"id":"rc24","q":"How is Phyllis described?","options":["Always late","Extremely shy","Meaning extremely well","Unkind to her siblings"],"answer":2,"explanation":"Phyllis was the youngest and “meant extremely well.”","chapter":"FAMILY","hint":"Recall the narrator’s short description of her."},{"id":"rc25","q":"What did Mother avoid spending all her time doing?","options":["Sitting through dull social visits","Reading stories to the children","Writing for the children","Playing games at home"],"answer":0,"explanation":"She did not spend all her time making or receiving dull calls.","chapter":"FAMILY","hint":"The passage contrasts Mother’s interests with dull social customs."},{"id":"rc26","q":"What did Mother help the children with?","options":["Building a station","Their home lessons","Taking care of horses","Repairing the engine"],"answer":1,"explanation":"She helped them with their home lessons.","chapter":"FAMILY","hint":"Think of an activity Mother shared after school."},{"id":"rc27","q":"When did Mother write stories for the children?","options":["While they were at school","During their birthday parties","When they were sleeping","Only on holidays"],"answer":0,"explanation":"She wrote stories while the children were at school.","chapter":"FAMILY","hint":"Think of when the children were away from home."},{"id":"rc28","q":"When did Mother read her stories aloud?","options":["Before breakfast","After tea","At midnight","During a train ride"],"answer":1,"explanation":"Mother read the stories aloud after tea.","chapter":"FAMILY","hint":"The text gives the time of day."},{"id":"rc29","q":"What did Mother make up for birthdays?","options":["Funny pieces of poetry","Maps of the railway","New board games","Toy trains"],"answer":0,"explanation":"She made up funny pieces of poetry for birthdays and special occasions.","chapter":"FAMILY","hint":"Think of something creative Mother produced."},{"id":"rc30","q":"Which event was celebrated with Mother’s poems?","options":["The arrival of a new puppy","The repair of a bridge","Refurnishing the doll’s house","The opening of a new school"],"answer":2,"explanation":"Refurnishing the doll’s house was one of the occasions for her poems.","chapter":"FAMILY","hint":"Remember one of the unusual family celebrations."},{"id":"rc31","q":"Which illness were the children sometimes getting over?","options":["Measles","Mumps","Chickenpox","Flu"],"answer":1,"explanation":"The text mentions the children getting over the mumps.","chapter":"FAMILY","hint":"The illness is mentioned alongside special occasions."},{"id":"rc32","q":"What kind of clothes did the children have?","options":["Heavy uniforms","Only old clothes","Pretty clothes","Clothes they made themselves"],"answer":2,"explanation":"The children had pretty clothes and everything they needed.","chapter":"FAMILY","hint":"The narrator lists what made their lives comfortable."},{"id":"rc33","q":"What appeared on the nursery wallpaper?","options":["Ships and harbours","Mother Goose","Maps of London","Wild animals"],"answer":1,"explanation":"The nursery had Mother Goose wallpaper.","chapter":"THE RED VILLA","hint":"The nursery was decorated with a nursery-rhyme theme."},{"id":"rc34","q":"Which room was full of toys?","options":["The kitchen","The dining room","The hall","The nursery"],"answer":3,"explanation":"The lovely nursery had heaps of toys.","chapter":"THE RED VILLA","hint":"Think of the room set aside for children."},{"id":"rc35","q":"How is the children’s nursemaid described?","options":["Kind and merry","Quiet and strict","Cross and unfair","Always absent"],"answer":0,"explanation":"The children had a kind and merry nursemaid.","chapter":"FAMILY","hint":"Remember the two adjectives used for the nursemaid."},{"id":"rc36","q":"What did Father always have if he could not play?","options":["A new toy","An excellent reason","A railway ticket","A storybook"],"answer":1,"explanation":"If Father was not ready for a game, he always had an excellent reason.","chapter":"FAMILY","hint":"Think of how Father justified being unavailable."},{"id":"rc37","q":"How did Father explain why he could not play?","options":["Briefly and angrily","In a written letter","Interestingly and funnily","Only after supper"],"answer":2,"explanation":"He explained his reasons so interestingly and funnily that the children believed him.","chapter":"FAMILY","hint":"Remember the tone of Father’s explanations."},{"id":"rc38","q":"What did the children realise only after life at the Red Villa ended?","options":["How happy they had been","How to drive a train","Where James slept","Who owned the house"],"answer":0,"explanation":"They did not know how happy they were until that life was over.","chapter":"THE RED VILLA","hint":"The narrator contrasts their happiness with later change."},{"id":"rc39","q":"How did the dreadful change come?","options":["Gradually over many years","Quite suddenly","After a long holiday","As the children planned"],"answer":1,"explanation":"The narrator says the dreadful change came quite suddenly.","chapter":"AFTERMATH","hint":"Think about the speed of the coming change."},{"id":"rc40","q":"What was Peter’s special birthday present?","options":["A bicycle","A sailing boat","A model engine","A mechanical bird"],"answer":2,"explanation":"Peter received a wonderful model engine on his tenth birthday.","chapter":"BIRTHDAY","hint":"Recall the object at the centre of the accident."},{"id":"rc41","q":"How did the narrator compare the engine with the other presents?","options":["It was less useful","It was the smallest","It was the cheapest","It was fuller of charm"],"answer":3,"explanation":"The engine was described as fuller of charm than all the other presents.","chapter":"BIRTHDAY","hint":"Think of how much Peter liked this present."},{"id":"rc42","q":"How long did the engine keep its charm in full perfection?","options":["One day","Exactly three days","A whole week","A month"],"answer":1,"explanation":"Its charm lasted in full perfection for exactly three days.","chapter":"BIRTHDAY","hint":"The text gives an exact length of time."},{"id":"rc43","q":"Whose inexperience might have caused the accident?","options":["Roberta’s","James’s","Peter’s","Father’s"],"answer":2,"explanation":"Peter’s inexperience is named as one possible cause.","chapter":"BIRTHDAY","hint":"The narrator suggests a possible cause but does not decide."},{"id":"rc44","q":"Whose good intentions might have contributed to the accident?","options":["Phyllis’s","The nursemaid’s","Mother’s","Roberta’s"],"answer":0,"explanation":"Phyllis’s good intentions are another possible cause.","chapter":"BIRTHDAY","hint":"The narrator also mentions someone who meant well."},{"id":"rc45","q":"What sound accompanied the engine accident?","options":["A quiet click","A loud bang","A whistle","A long squeak"],"answer":1,"explanation":"The engine went off with a bang.","chapter":"BIRTHDAY","hint":"Remember how the accident was described."},{"id":"rc46","q":"What did James do after the explosion?","options":["He hid under a bed","He slept beside Peter","He went out and did not return all day","He ran straight to Mother"],"answer":2,"explanation":"James was frightened and stayed away all day.","chapter":"AFTERMATH","hint":"Think about how the dog reacted to the noise."},{"id":"rc47","q":"Where were the Noah’s Ark figures when they were broken?","options":["In the tender","On the mantelpiece","In the nursery cupboard","Under the dining table"],"answer":0,"explanation":"The Noah’s Ark people were in the tender of the model engine.","chapter":"AFTERMATH","hint":"The figures were travelling in part of the train."},{"id":"rc48","q":"What happened to the Noah’s Ark people?","options":["They were given away","They were broken to bits","They were lost in the garden","They were left untouched"],"answer":1,"explanation":"All the Noah’s Ark people in the tender were broken to bits.","chapter":"AFTERMATH","hint":"Recall what happened to the little toy figures."},{"id":"rc49","q":"What else was hurt besides the engine?","options":["Mother’s hand","James’s leg","The house windows","Peter’s feelings"],"answer":3,"explanation":"Nothing else was hurt except the engine and Peter’s feelings.","chapter":"AFTERMATH","hint":"The narrator includes an emotional kind of hurt."},{"id":"rc50","q":"What did the others say Peter did after the accident?","options":["He laughed","He shouted at Father","He cried","He ran away all day"],"answer":2,"explanation":"The others said that Peter cried over his broken engine.","chapter":"AFTERMATH","hint":"Remember the disagreement about Peter’s reaction."},{"id":"rc51","q":"Why did Peter say his eyes were red?","options":["Because he had a cold","Because he had been reading","Because of dust from the engine","Because he was tired"],"answer":0,"explanation":"Peter said his eyes were red because he had a cold.","chapter":"AFTERMATH","hint":"Peter gave a reason for his red eyes."},{"id":"rc52","q":"When did Peter discover his explanation was true?","options":["At his birthday party","On the following day","A week later","Immediately after the bang"],"answer":1,"explanation":"The next day he had to stay in bed, confirming that he had a cold.","chapter":"AFTERMATH","hint":"Think of what the narrator says happened next."},{"id":"rc53","q":"What was the purpose of the tender behind a steam engine?","options":["To carry passengers","To store toys","To carry coal","To steer the engine"],"answer":2,"explanation":"The footnote explains that a tender is used to carry coal.","chapter":"AFTERMATH","hint":"The definition appears in a footnote."}];
+const byId = Object.fromEntries(BANK.map(q => [q.id,q]));
+const QUIZ_SIZE = 10;
+const STORE_KEY = 'railway-children-cinematic-v2';
+const $ = id => document.getElementById(id);
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+const shuffle = input => { const a = [...input]; for (let i = a.length-1; i>0; i--) { const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const orderOptions = () => shuffle([0,1,2,3]);
+function newState(){return {version:2,queue:shuffle(BANK.map(q=>q.id)),cycle:1,attempts:0,best:0,mode:'classic',soundOn:true,lastRunIds:[],active:null,last:null};}
+function validSession(run){
+  return Boolean(run && Array.isArray(run.ids) && run.ids.length===QUIZ_SIZE &&
+    new Set(run.ids).size===QUIZ_SIZE && run.ids.every(id=>byId[id]) &&
+    Array.isArray(run.orders) && run.orders.length===QUIZ_SIZE &&
+    run.orders.every(a=>Array.isArray(a) && a.length===4 && new Set(a).size===4 && a.every(i=>Number.isInteger(i) && i>=0 && i<4)) &&
+    Array.isArray(run.answers) && run.answers.length===QUIZ_SIZE &&
+    run.answers.every(a=>a===null || a===-1 || (Number.isInteger(a) && a>=0 && a<4)) &&
+    Array.isArray(run.hints) && run.hints.length===QUIZ_SIZE &&
+    Number.isInteger(run.current) && run.current>=0 && run.current<QUIZ_SIZE &&
+    (run.mode==='classic' || run.mode==='timed'));
+}
+function loadState(){
+  try {
+    const saved=JSON.parse(localStorage.getItem(STORE_KEY));
+    if(saved && saved.version===2 && Array.isArray(saved.queue) &&
+        new Set(saved.queue).size===saved.queue.length && saved.queue.every(id=>byId[id]) &&
+        Number.isInteger(saved.attempts) && saved.attempts>=0){
+      if(saved.active && !validSession(saved.active)) saved.active=null;
+      if(!Array.isArray(saved.lastRunIds)) saved.lastRunIds=[];
+      if(!['classic','timed'].includes(saved.mode)) saved.mode='classic';
+      if(typeof saved.soundOn!=='boolean') saved.soundOn=true;
+      if(!Number.isInteger(saved.best)) saved.best=0;
+      if(!Number.isInteger(saved.cycle) || saved.cycle<1) saved.cycle=1;
+      return saved;
+    }
+  } catch(e){}
+  return newState();
+}
+let state=loadState();
+let session=state.active;
+let audioCtx=null, timerId=null, timerRemaining=20, timerDeadline=0, animating=false;
+let lastTotalCorrect=0, maxStreak=0;
+function save(){try{localStorage.setItem(STORE_KEY,JSON.stringify(state));}catch(e){ /* local file in privacy mode */ }}
+function isActive(id){return $(id).classList.contains('active');}
+function showScreen(id){
+  const replace=()=>{document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x.id===id)); window.scrollTo(0,0);};
+  if(reduced.matches){replace();return;}
+  const wipe=$('cinematicWipe');wipe.classList.remove('is-out');wipe.classList.add('is-in');
+  setTimeout(replace,280);
+  setTimeout(()=>{wipe.classList.remove('is-in');wipe.classList.add('is-out');},660);
+  setTimeout(()=>wipe.classList.remove('is-out'),1310);
+}
+function getAudio(){if(!state.soundOn)return null;try{const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return null;if(!audioCtx)audioCtx=new Ctx();if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});return audioCtx;}catch(e){return null;}}
+function tone(f,delay,duration,vol=.027,type='sine'){
+  const c=getAudio();if(!c)return;
+  try{const t=c.currentTime+delay,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f,t);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.025);g.gain.exponentialRampToValueAtTime(.0001,t+duration);
+    o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+duration+.02);}catch(e){}
+}
+function sfx(type){if(!state.soundOn)return;
+  if(type==='start'){tone(196,0,.34,.024,'triangle');tone(392,.15,.32,.028);tone(587,.32,.36,.02);}
+  if(type==='click'){tone(470,0,.085,.014,'triangle');}
+  if(type==='correct'){tone(523,0,.15,.026);tone(659,.11,.17,.029);tone(784,.24,.23,.026);}
+  if(type==='wrong'){tone(350,0,.16,.018,'triangle');tone(260,.14,.25,.018,'triangle');}
+  if(type==='next'){tone(390,0,.10,.018,'triangle');tone(500,.09,.17,.016);}
+  if(type==='finish'){[392,494,587,784,988,1175].forEach((f,i)=>tone(f,i*.13,.28,.026));}
+  if(type==='hint'){tone(650,0,.20,.018);tone(855,.13,.16,.013);}
+}
+function updateSound(){
+ $('soundBtn').setAttribute('aria-pressed',String(state.soundOn));$('soundBtn').setAttribute('aria-label',state.soundOn?'Turn sound off':'Turn sound on');
+ $('soundLabel').textContent=state.soundOn?'Sound on':'Sound off';
+ $('soundIcon').innerHTML=state.soundOn?'<path d="M11 5L6 9H3v6h3l5 4V5z"/><path d="M15 9a5 5 0 010 6m3-9a9 9 0 010 12"/>':'<path d="M11 5L6 9H3v6h3l5 4V5z"/><path d="M17 9l5 6m0-6-5 6"/>';
+}
+$('soundBtn').addEventListener('click',()=>{state.soundOn=!state.soundOn;updateSound();save();if(state.soundOn)sfx('start');});
+function updateMode(){
+  [['relaxedMode','classic'],['timedMode','timed']].forEach(([id,v])=>{$(id).classList.toggle('selected',state.mode===v);$(id).setAttribute('aria-pressed',String(state.mode===v));});
+}
+[['relaxedMode','classic'],['timedMode','timed']].forEach(([id,v])=>$(id).addEventListener('click',()=>{state.mode=v;updateMode();save();sfx('click');}));
+function formatRemaining(){
+  $('remainingCount').textContent=state.queue.length;
+  $('bestCount').textContent=state.best?`${state.best}/10`:'—';
+  $('bankInfo').textContent=`${BANK.length} story-based questions in the archive · ${state.queue.length} unseen in this cycle.`;
+}
+function getFreshBatch(){
+  const ids=[];
+  while(ids.length<QUIZ_SIZE){
+    if(!state.queue.length){
+      state.cycle++;
+      const recentlyUsed=new Set(ids.concat(state.lastRunIds || []));
+      const shuffled=shuffle(BANK.map(q=>q.id));
+      // Keep immediately previous questions toward the back when a new cycle begins.
+      state.queue=shuffled.filter(id=>!recentlyUsed.has(id)).concat(shuffled.filter(id=>recentlyUsed.has(id)));
+    }
+    ids.push(...state.queue.splice(0,QUIZ_SIZE-ids.length));
+  }
+  state.lastRunIds=[...ids];
+  return ids;
+}
+function begin(){
+  if(state.active)session=state.active;
+  else{
+    const ids=getFreshBatch();
+    session={ids,orders:ids.map(orderOptions),answers:Array(QUIZ_SIZE).fill(null),hints:Array(QUIZ_SIZE).fill(false),current:0,mode:state.mode};
+    state.active=session;save();
+  }
+  $('reviewWrap').classList.remove('show');
+  sfx('start');renderQuestion();showScreen('quiz');
+  $('startBtn').innerHTML='Begin the journey <span aria-hidden="true">→</span>';
+}
+$('startBtn').addEventListener('click',begin);
+function updateProgress(){
+  const i=session.current;
+  $('progressLabel').textContent=`${i+1} / ${QUIZ_SIZE}`;
+  $('questionNumber').textContent=`Question ${String(i+1).padStart(2,'0')} / ${QUIZ_SIZE}`;
+  $('trainCursor').style.setProperty('--percent',`${100*i/(QUIZ_SIZE-1)}%`);
+  $('chapterList').innerHTML=session.ids.map((_,n)=>`<span class="chapter-num ${n<i?'done':n===i?'current':''}" aria-label="Question ${n+1}${n<i?' completed':n===i?' current':''}">${n+1}</span>`).join('');
+  let streak=0;for(let n=0;n<=i;n++){if(session.answers[n]!==null && session.answers[n]===byId[session.ids[n]].answer)streak++;else streak=0;}
+  $('streakCount').textContent=streak;
+}
+function renderQuestion(){
+  if(!session)return;
+  const i=session.current,q=byId[session.ids[i]],answer=session.answers[i];
+  updateProgress();$('chapterTag').textContent=q.chapter+' / READING COMPREHENSION';$('questionText').textContent=q.q;
+  $('feedback').className='feedback';$('feedbackTitle').textContent='';$('feedbackExplanation').textContent='';
+  $('nextBtn').classList.remove('show');$('nextBtn').innerHTML=(i===QUIZ_SIZE-1?'See my results':'Next question')+' <span aria-hidden="true">→</span>';
+  $('questionNote').textContent='Choose one answer to continue.';
+  $('hintContent').textContent='';$('hintContent').classList.remove('show');$('hintBtn').disabled=false;$('hintBtn').textContent='✦   Need a hint?';
+  const box=$('options');box.replaceChildren();
+  session.orders[i].forEach((original,n)=>{
+    const button=document.createElement('button');button.className='option';button.type='button';button.setAttribute('aria-label',`${'ABCD'[n]}. ${q.options[original]}`);
+    const l=document.createElement('span');l.className='opt-letter';l.textContent='ABCD'[n];
+    const t=document.createElement('span');t.className='opt-text';t.textContent=q.options[original];
+    button.append(l,t);button.addEventListener('click',()=>choose(n));box.appendChild(button);
+  });
+  $('timerWrap').hidden=session.mode!=='timed';
+  if(session.hints[i])revealHint(false);
+  if(answer!==null)showFeedback(answer,false);
+  else if(session.mode==='timed')startTimer();
+}
+function revealHint(sound=true){
+  if(!session || session.answers[session.current]!==null)return;
+  session.hints[session.current]=true;save();
+  $('hintContent').textContent=byId[session.ids[session.current]].hint;
+  $('hintContent').classList.add('show');$('hintBtn').disabled=true;$('hintBtn').textContent='✧   Hint revealed';
+  if(sound)sfx('hint');
+}
+$('hintBtn').addEventListener('click',()=>revealHint());
+function choose(n){
+  if(!session || session.answers[session.current]!==null)return;
+  const original=session.orders[session.current][n];session.answers[session.current]=original;save();stopTimer();
+  sfx(original===byId[session.ids[session.current]].answer?'correct':'wrong');showFeedback(original,true);
+}
+function showFeedback(selected,animated){
+  const i=session.current,q=byId[session.ids[i]],correct=selected===q.answer;
+  Array.from($('options').children).forEach((button,n)=>{
+    button.disabled=true;const original=session.orders[i][n];
+    if(original===q.answer)button.classList.add('correct');else if(original===selected)button.classList.add('wrong');
+  });
+  $('feedback').className='feedback show'+(correct?'':' is-wrong');
+  $('feedbackTitle').textContent=selected===-1?'⌛  Time is up.':correct?'✓  Beautifully done!':'✦  Not quite — keep going.';
+  $('feedbackExplanation').textContent=q.explanation;
+  $('questionNote').textContent=correct?'One step closer to the final station.':'Every answer is part of learning.';
+  $('nextBtn').classList.add('show');$('hintBtn').disabled=true;
+  if(selected===-1){$('hintBtn').textContent='✧   Time expired';sfx('wrong');}
+  updateProgress();
+}
+function stopTimer(){if(timerId){clearInterval(timerId);timerId=null;}}
+function startTimer(){
+  stopTimer();timerRemaining=20;timerDeadline=Date.now()+20000;updateTimer();
+  timerId=setInterval(()=>{
+    if(document.hidden){timerRemaining=Math.max(0,(timerDeadline-Date.now())/1000);stopTimer();return;}
+    timerRemaining=Math.max(0,(timerDeadline-Date.now())/1000);updateTimer();
+    if(timerRemaining<=0){stopTimer();if(session && session.answers[session.current]===null){session.answers[session.current]=-1;save();showFeedback(-1,true);}}
+  },100);
+}
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden && isActive('quiz') && session && session.mode==='timed' && session.answers[session.current]===null && !timerId){timerDeadline=Date.now()+Math.max(.05,timerRemaining)*1000;
+    timerId=setInterval(()=>{timerRemaining=Math.max(0,(timerDeadline-Date.now())/1000);updateTimer();if(timerRemaining<=0){stopTimer();session.answers[session.current]=-1;save();showFeedback(-1,true);}},100);}
+});
+function updateTimer(){$('timerText').textContent=String(Math.ceil(timerRemaining));$('timerFill').style.width=`${Math.max(0,timerRemaining/20)*100}%`;$('timerWrap').classList.toggle('danger',timerRemaining<6);}
+$('nextBtn').addEventListener('click',()=>{
+ if(!session||session.answers[session.current]===null||animating)return;
+ stopTimer();
+ if(session.current===QUIZ_SIZE-1){finish();return;}
+ animating=true;sfx('next');const panel=document.querySelector('.card-inner');panel.classList.remove('is-entering');panel.classList.add('is-leaving');
+ setTimeout(()=>{session.current++;save();panel.classList.remove('is-leaving');renderQuestion();panel.classList.add('is-entering');const t=$('questionText');t.setAttribute('tabindex','-1');t.focus({preventScroll:true});
+   setTimeout(()=>{panel.classList.remove('is-entering');animating=false;},570);
+ },reduced.matches?0:185);
+});
+function finish(){
+  if(!session)return;
+  stopTimer();
+  const run=session,correct=run.answers.filter((a,i)=>a===byId[run.ids[i]].answer).length;
+  let streak=0,maxStreak=0;run.answers.forEach((a,i)=>{if(a===byId[run.ids[i]].answer){streak++;maxStreak=Math.max(streak,maxStreak);}else streak=0;});
+  const newBest=correct>state.best;state.best=Math.max(correct,state.best);state.attempts++;
+  state.last={...run,correct,maxStreak};state.active=null;session=null;save();
+  $('scoreText').textContent=`${correct}/10`;
+  let title,description;
+  if(correct===10){title='A flawless journey!';description='Every detail remembered. The chapter is yours.';}
+  else if(correct>=8){title='A splendid journey!';description='An excellent reading adventure. Only a few little details to revisit.';}
+  else if(correct>=5){title='A promising beginning!';description='You remembered much of the story. Another new set of questions awaits.';}
+  else{title='Every page is a new chance.';description='The adventure has only begun. Explore the answers and try again.';}
+  $('resultMessage').textContent=title;$('resultDescription').textContent=description;
+  $('resultBest').textContent=`${state.best} / 10`;$('resultAttempts').textContent=state.attempts;
+  $('resultUnseen').textContent=state.queue.length;
+  const badges=[];if(state.attempts===1)badges.push('✦ FIRST JOURNEY');if(newBest)badges.push('◆ PERSONAL BEST');if(correct>=8)badges.push('★ SHARP READER');if(maxStreak>=5)badges.push('✧ FIVE IN A ROW');if(correct===10)badges.push('♛ PERFECT CHAPTER');
+  if(state.queue.length===0)badges.push('◈ ARCHIVE EXPLORED');
+  $('achievements').innerHTML='';badges.forEach(t=>{const s=document.createElement('span');s.className='achievement';s.textContent=t;$('achievements').appendChild(s);});
+  $('cycleNote').textContent=state.queue.length>=QUIZ_SIZE?`${state.queue.length} questions have never appeared in this cycle. Your next journey will have no repeats.`:state.queue.length>0?`${state.queue.length} unseen questions remain. After those, a new cycle begins.`:'The full archive has been explored. A newly shuffled cycle begins next.';
+  $('reviewWrap').classList.remove('show');$('reviewBtn').setAttribute('aria-expanded','false');$('reviewBtn').textContent='Review answers';
+  fillReview(run);
+  showScreen('results');sfx('finish');if(correct>=8&&!reduced.matches)confetti();
+  updateWelcome();
+}
+function fillReview(run){
+ const box=$('reviewList');box.replaceChildren();run.ids.forEach((id,i)=>{
+  const q=byId[id],good=run.answers[i]===q.answer,el=document.createElement('article');el.className='review-item';
+  const row=document.createElement('div');row.className='review-line';const heading=document.createElement('strong');heading.textContent=`${i+1}. ${q.q}`;
+  const mark=document.createElement('span');mark.className='review-mark'+(good?'':' no');mark.textContent=good?'✓ CORRECT':'✕ INCORRECT';row.append(heading,mark);
+  const own=document.createElement('p');own.textContent='Your answer: '+(run.answers[i]===-1?'No answer (time expired)':q.options[run.answers[i]]);
+  const right=document.createElement('p'),b=document.createElement('b');b.textContent='Correct answer: ';right.append(b,document.createTextNode(q.options[q.answer]));
+  const why=document.createElement('p');why.textContent=q.explanation;el.append(row,own,right,why);box.appendChild(el);
+ });
+}
+$('reviewBtn').addEventListener('click',()=>{const open=!$('reviewWrap').classList.contains('show');$('reviewWrap').classList.toggle('show',open);$('reviewBtn').textContent=open?'Hide answers':'Review answers';$('reviewBtn').setAttribute('aria-expanded',String(open));if(open)$('reviewWrap').scrollIntoView({behavior:reduced.matches?'instant':'smooth',block:'nearest'});});
+$('retryBtn').addEventListener('click',()=>{session=null;begin();});
+$('shareBtn').addEventListener('click',async()=>{
+ const data=state.last;if(!data)return;const publicUrl=/^https?:$/.test(location.protocol)?location.href:'';const msg=`I scored ${data.correct}/10 in The Railway Children reading quiz! 🚂`+(publicUrl?'\n'+publicUrl:'');
+ try{if(navigator.share)await navigator.share({title:'The Railway Children Quiz',text:msg});else if(navigator.clipboard) {await navigator.clipboard.writeText(msg);toast('Result copied to clipboard.');}else{const t=document.createElement('textarea');t.value=msg;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();toast('Result copied to clipboard.');}}catch(e){if(e.name!=='AbortError')toast(msg);}
+});
+function toast(msg){let el=$('toast');if(!el){el=document.createElement('div');el.id='toast';el.style.cssText='position:fixed;z-index:200;bottom:23px;left:50%;transform:translateX(-50%);padding:14px 19px;background:#263d36;color:#fff7df;border-radius:4px;box-shadow:0 12px 40px #0003;font-size:13px';document.body.appendChild(el);}el.textContent=msg;el.hidden=false;setTimeout(()=>el.hidden=true,2800);}
+function confetti(){const colors=['#b99158','#8d3539','#285c4c','#d7bb8d'];for(let i=0;i<36;i++){const el=document.createElement('span');el.className='confetti';el.style.background=colors[i%colors.length];el.style.setProperty('--start',`${Math.random()*80-40}vw`);el.style.setProperty('--end',`${Math.random()*110-55}vw`);el.style.animationDelay=`${Math.random()*.3}s`;el.style.animationDuration=`${2+Math.random()*1.5}s`;document.body.appendChild(el);setTimeout(()=>el.remove(),4500);}}
+function updateWelcome(){formatRemaining();$('startBtn').innerHTML=state.active?'Continue your journey <span aria-hidden="true">→</span>':'Begin the journey <span aria-hidden="true">→</span>';}
+// Scroll-triggered film scenes and restrained multi-layer parallax.
+const io=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target);}}),{threshold:.14,rootMargin:'0px 0px -18px 0px'}):null;
+document.querySelectorAll('.reveal').forEach((el)=>io?io.observe(el):el.classList.add('visible'));
+// A fast swipe must not leave off-screen story panels permanently invisible.
+function revealPassed(){for(const el of document.querySelectorAll('.reveal:not(.visible)')){if(el.getBoundingClientRect().top<window.innerHeight*.94){el.classList.add('visible');if(io)io.unobserve(el);}}}
+window.addEventListener('scroll',revealPassed,{passive:true});
+requestAnimationFrame(revealPassed);
+if(!reduced.matches){let pending=false;const art=$('heroArt');
+  window.addEventListener('pointermove',e=>{if(e.pointerType==='touch'||!isActive('welcome')||!art)return;
+    const x=(e.clientX/window.innerWidth-.5)*12,y=(e.clientY/window.innerHeight-.5)*7;
+    art.style.setProperty('--shift-x',`${x.toFixed(1)}px`);art.style.setProperty('--shift-y',`${y.toFixed(1)}px`);
+    document.documentElement.style.setProperty('--glow-x',`${Math.round(e.clientX/window.innerWidth*100)}%`);
+    document.documentElement.style.setProperty('--glow-y',`${Math.round(e.clientY/window.innerHeight*100)}%`);
+  },{passive:true});
+  window.addEventListener('scroll',()=>{if(pending||!isActive('welcome'))return;pending=true;requestAnimationFrame(()=>{art.style.setProperty('--scroll-y',`${Math.min(24,window.scrollY*.035)}px`);pending=false;});},{passive:true});
+}
+document.addEventListener('keydown',e=>{
+ if(e.key.toLowerCase()==='m'&&!e.altKey&&!e.ctrlKey&&!e.metaKey){state.soundOn=!state.soundOn;updateSound();save();return;}
+ if(!session||!isActive('quiz')||e.altKey||e.ctrlKey||e.metaKey)return;
+ if(/^[1-4]$/.test(e.key)&&session.answers[session.current]===null){choose(Number(e.key)-1);}
+ else if(e.key==='Enter'&&session.answers[session.current]!==null&&document.activeElement!==$('soundBtn')){$('nextBtn').click();}
+});
+updateMode();updateSound();updateWelcome();
+</script>
+</body>
+</html>
